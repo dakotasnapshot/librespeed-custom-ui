@@ -72,4 +72,4 @@ LGPL-3.0 — same as LibreSpeed.
 
 - [LibreSpeed](https://github.com/librespeed/speedtest) — the speed test engine
 - UI design inspired by Ookla Speedtest Custom
-- Created by [Hawthorn Consulting](https://hawthornconsulting.net)
+- Created by Dakota Cole
