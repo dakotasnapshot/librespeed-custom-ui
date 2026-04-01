@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no" />
+<title>Speed Test</title>
+<script type="text/javascript" src="speedtest.js"></script>
+<style>
+/* ============================================
+   LibreSpeed Custom UI — Ookla-Style Template
+   https://github.com/dakotasnapshot/librespeed-custom-ui
+   License: LGPL-3.0 (same as LibreSpeed)
+   
+   CUSTOMIZATION:
+   - Change colors below (--primary, --secondary)
+   - Update brand name in HTML
+   - Update server name/location in HTML
+   ============================================ */
+:root{
+    --primary:#1a73e8;      /* Primary brand color (download, buttons) */
+    --secondary:#7c3aed;    /* Secondary color (upload) */
+    --text:#1a1a2e;
+    --text-light:#999;
+    --text-lighter:#bbb;
+    --bg:#ffffff;
+    --bg-muted:#f8f9fa;
+    --border:#eee;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    height:100%;
+    overflow:hidden;
+}
+.wrapper{
+    max-width:900px;
+    margin:0 auto;
+    padding:20px 28px 16px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+/* Header */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-shrink:0;
+}
+.brand{font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;color:var(--primary);}
+.header-right{font-size:0.72rem;color:var(--text-lighter);font-weight:500;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* Main area */
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+/* Testing state - big center number */
+.testing-view{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+.testing-phase{
+    font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;
+    color:var(--primary);font-weight:600;
+}
+.testing-phase.upload{color:var(--secondary);}
+.testing-speed{
+    font-size:5rem;font-weight:700;color:var(--text);line-height:1;
+    font-variant-numeric:tabular-nums;
+}
+.testing-unit{font-size:1rem;color:var(--text-light);font-weight:400;margin-top:-4px;}
+
+/* Results view */
+.results-view{display:none;}
+.results-layout{
+    display:grid;
+    grid-template-columns:140px 1fr 200px;
+    gap:24px;
+    align-items:start;
+}
+
+/* Left - ping/jitter */
+.metrics-col{display:flex;flex-direction:column;gap:24px;padding-top:8px;}
+.metric-label{
+    font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--text-light);font-weight:600;margin-bottom:2px;
+}
+.metric-val{
+    font-size:2.8rem;font-weight:300;color:var(--text);line-height:1.1;
+    font-variant-numeric:tabular-nums;
+}
+.metric-unit{font-size:0.82rem;color:var(--text-lighter);font-weight:400;}
+
+/* Center - download/upload with graphs */
+.speeds-col{display:flex;flex-direction:column;gap:20px;}
+.speed-row{display:flex;align-items:flex-end;gap:16px;}
+.speed-info{min-width:140px;}
+.speed-label{
+    font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--text-light);font-weight:600;margin-bottom:2px;
+}
+.speed-val{
+    font-size:2.8rem;font-weight:300;line-height:1.1;
+    font-variant-numeric:tabular-nums;
+}
+.speed-val.dl{color:var(--primary);}
+.speed-val.ul{color:var(--secondary);}
+.speed-unit{font-size:0.82rem;color:var(--text-lighter);font-weight:400;}
+.speed-graph{
+    flex:1;height:48px;overflow:hidden;border-radius:4px;
+    align-self:flex-end;margin-bottom:6px;
+}
+.speed-graph canvas{width:100%;height:100%;display:block;}
+
+/* Right - again button + server */
+.action-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    padding-top:4px;
+}
+.again-btn{
+    width:110px;height:110px;border-radius:50%;
+    background:none;
+    border:3px solid var(--primary);
+    color:var(--primary);
+    font-size:1.1rem;font-weight:700;letter-spacing:0.06em;
+    cursor:pointer;
+    transition:all 0.2s;
+}
+.again-btn:hover{
+    background:color-mix(in srgb, var(--primary) 6%, transparent);
+    transform:scale(1.04);
+}
+.server-select{text-align:center;}
+.server-option{
+    display:flex;align-items:center;gap:8px;
+    font-size:0.82rem;color:var(--text);font-weight:600;
+    margin-bottom:2px;
+}
+.server-option .loc{font-weight:400;color:var(--text-light);font-size:0.78rem;}
+.server-dot{
+    width:12px;height:12px;border-radius:50%;
+    border:2px solid var(--primary);
+    display:inline-block;background:var(--primary);
+}
+
+/* Footer */
+.footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:12px;
+    margin-top:auto;
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+}
+.footer-isp{font-size:0.88rem;font-weight:600;color:var(--text);}
+.footer-ip{font-size:0.78rem;color:var(--text-light);}
+.footer-server{font-size:0.88rem;font-weight:600;color:var(--text);}
+.footer-loc{font-size:0.78rem;color:var(--text-light);}
+
+/* Progress */
+.progress-wrap{margin-top:12px;flex-shrink:0;}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;width:0%;border-radius:2px;
+    background:linear-gradient(90deg,var(--secondary),var(--primary));transition:width 0.4s;}
+
+@media(max-width:700px){
+    .results-layout{grid-template-columns:1fr;gap:16px;}
+    .metrics-col{flex-direction:row;gap:32px;}
+    .speed-row{flex-direction:column;align-items:flex-start;gap:8px;}
+    .speed-graph{width:100%;height:36px;}
+    .action-col{flex-direction:row;gap:16px;}
+    .again-btn{width:80px;height:80px;font-size:0.9rem;}
+    .testing-speed{font-size:3.5rem;}
+}
+</style>
+<script>
+var s=new Speedtest();
+s.setParameter("telemetry_level","basic");
+var dlHistory=[],ulHistory=[];
+var maxH=80;
+
+s.onupdate=function(data){
+    var testView=I("testingView");
+    var resView=I("resultsView");
+
+    if(data.testState>=1 && data.testState<=3){
+        testView.style.display="flex";
+        resView.style.display="none";
+    }
+
+    var speed="—",phase="",isUl=false;
+    if(data.testState==1){
+        speed=(data.dlStatus==0)?"...":data.dlStatus;
+        phase="DOWNLOAD";
+        if(data.dlStatus){dlHistory.push(parseFloat(data.dlStatus)||0);if(dlHistory.length>maxH)dlHistory.shift();}
+    }
+    if(data.testState==3){
+        speed=(data.ulStatus==0)?"...":data.ulStatus;
+        phase="UPLOAD";isUl=true;
+        if(data.ulStatus){ulHistory.push(parseFloat(data.ulStatus)||0);if(ulHistory.length>maxH)ulHistory.shift();}
+    }
+    if(data.testState==0||data.testState==2) phase="PING";
+
+    I("testingPhase").textContent=phase;
+    I("testingPhase").className=isUl?"testing-phase upload":"testing-phase";
+    I("testingSpeed").textContent=speed;
+
+    if(data.dlStatus) I("dlVal").textContent=data.dlStatus;
+    if(data.ulStatus) I("ulVal").textContent=data.ulStatus;
+    if(data.pingStatus) I("pingVal").textContent=data.pingStatus;
+    if(data.jitterStatus) I("jitVal").textContent=data.jitterStatus;
+    if(data.clientIp) I("footerIp").textContent=data.clientIp;
+
+    if(data.ispInfo){
+        try{
+            var info=JSON.parse(data.ispInfo);
+            if(info.processedString){
+                var p=info.processedString.split("-");
+                I("footerIsp").textContent=(p[0]||"").trim();
+            }
+        }catch(e){
+            if(typeof data.ispInfo==="string"&&data.ispInfo.length<80)
+                I("footerIsp").textContent=data.ispInfo;
+        }
+    }
+
+    var pct=0;
+    if(data.testState==0) pct=5;
+    if(data.testState==1) pct=10+(parseFloat(data.dlProgress)||0)*40;
+    if(data.testState==2) pct=52;
+    if(data.testState==3) pct=55+(parseFloat(data.ulProgress)||0)*40;
+    I("progressFill").style.width=Math.min(pct,100)+"%";
+};
+
+s.onend=function(aborted){
+    if(!aborted){
+        I("testingView").style.display="none";
+        I("resultsView").style.display="block";
+        I("progressFill").style.width="100%";
+        drawGraph("dlGraph",dlHistory,"var(--primary)");
+        drawGraph("ulGraph",ulHistory,"var(--secondary)");
+    }
+};
+
+function runTest(){
+    dlHistory=[];ulHistory=[];
+    I("dlVal").textContent="—";I("ulVal").textContent="—";
+    I("pingVal").textContent="—";I("jitVal").textContent="—";
+    I("testingView").style.display="flex";
+    I("resultsView").style.display="none";
+    I("progressFill").style.width="5%";
+    I("testingSpeed").textContent="...";
+    I("testingPhase").textContent="STARTING";
+    s.start();
+}
+
+function drawGraph(canvasId,data,color){
+    var c=I(canvasId);if(!c||data.length<2)return;
+    var ctx=c.getContext("2d");
+    // Resolve CSS variable
+    var resolvedColor=getComputedStyle(document.documentElement).getPropertyValue(color.replace("var(","").replace(")","")).trim()||color;
+    var dpr=window.devicePixelRatio||1;
+    var w=c.parentElement.offsetWidth,h=c.parentElement.offsetHeight;
+    c.width=w*dpr;c.height=h*dpr;
+    c.style.width=w+"px";c.style.height=h+"px";
+    ctx.scale(dpr,dpr);
+    var max=Math.max.apply(null,data)*1.15||1;
+    ctx.beginPath();ctx.moveTo(0,h);
+    data.forEach(function(v,i){ctx.lineTo((i/(data.length-1))*w,h-(v/max)*h);});
+    ctx.lineTo(w,h);ctx.closePath();
+    ctx.fillStyle=resolvedColor+"25";ctx.fill();
+    ctx.beginPath();
+    data.forEach(function(v,i){
+        var x=(i/(data.length-1))*w,y=h-(v/max)*h;
+        i==0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle=resolvedColor;ctx.lineWidth=1.5;ctx.stroke();
+}
+
+function I(id){return document.getElementById(id);}
+
+// Auto-start on page load
+window.addEventListener("load",function(){setTimeout(runTest,600);});
+</script>
+</head>
+<body>
+<div class="wrapper">
+    <!-- Header — CUSTOMIZE: Change brand name -->
+    <div class="header">
+        <div class="brand">YOUR ISP</div>
+        <div class="header-right">Speed Test</div>
+    </div>
+
+    <div class="main">
+        <!-- Testing state -->
+        <div class="testing-view" id="testingView">
+            <div class="testing-phase" id="testingPhase">STARTING</div>
+            <div class="testing-speed" id="testingSpeed">...</div>
+            <div class="testing-unit">Mbps</div>
+        </div>
+
+        <!-- Results state -->
+        <div class="results-view" id="resultsView">
+            <div class="results-layout">
+                <div class="metrics-col">
+                    <div class="metric-item">
+                        <div class="metric-label">PING</div>
+                        <div class="metric-val" id="pingVal">—</div>
+                        <div class="metric-unit">ms</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">JITTER</div>
+                        <div class="metric-val" id="jitVal">—</div>
+                        <div class="metric-unit">ms</div>
+                    </div>
+                </div>
+
+                <div class="speeds-col">
+                    <div class="speed-row">
+                        <div class="speed-info">
+                            <div class="speed-label">DOWNLOAD</div>
+                            <div class="speed-val dl" id="dlVal">—</div>
+                            <div class="speed-unit">Mbps</div>
+                        </div>
+                        <div class="speed-graph"><canvas id="dlGraph"></canvas></div>
+                    </div>
+                    <div class="speed-row">
+                        <div class="speed-info">
+                            <div class="speed-label">UPLOAD</div>
+                            <div class="speed-val ul" id="ulVal">—</div>
+                            <div class="speed-unit">Mbps</div>
+                        </div>
+                        <div class="speed-graph"><canvas id="ulGraph"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="action-col">
+                    <!-- CUSTOMIZE: Change server name/location -->
+                    <button class="again-btn" onclick="runTest()">AGAIN</button>
+                    <div class="server-select">
+                        <div class="server-option">
+                            <span class="server-dot"></span>
+                            <div>
+                                <div>Your Server</div>
+                                <div class="loc">Your City, ST</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-left">
+            <div>
+                <div class="footer-isp" id="footerIsp"></div>
+                <div class="footer-ip" id="footerIp"></div>
+            </div>
+        </div>
+        <div class="footer-right">
+            <div>
+                <!-- CUSTOMIZE: Change server name/location -->
+                <div class="footer-server">Your Server</div>
+                <div class="footer-loc">Your City, ST</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
