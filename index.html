@@ -222,8 +222,8 @@ s.onupdate=function(data){
 
     if(data.dlStatus) I("dlVal").textContent=data.dlStatus;
     if(data.ulStatus) I("ulVal").textContent=data.ulStatus;
-    if(data.pingStatus) I("pingVal").textContent=data.pingStatus;
-    if(data.jitterStatus) I("jitVal").textContent=data.jitterStatus;
+    if(data.pingStatus) I("pingVal").textContent=Math.round(parseFloat(data.pingStatus))||data.pingStatus;
+    if(data.jitterStatus) I("jitVal").textContent=Math.round(parseFloat(data.jitterStatus))||data.jitterStatus;
     if(data.clientIp) I("footerIp").textContent=data.clientIp;
 
     if(data.ispInfo){
